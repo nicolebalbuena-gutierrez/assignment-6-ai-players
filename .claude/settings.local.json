@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew clean build:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(./gradlew javadoc:*)",
+      "Bash(git add:*)",
+      "Bash(./gradlew test:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd comprehensive test suite for Assignment 6 (152 tests)\n\nCreate 8 test files covering all major patterns and components:\n\nModel Layer Tests (65 tests):\n- CharacterStatsTest: 45 tests for immutable stats, validation, record behavior\n- CharacterTest: 20 tests for character management, strategies, health/mana\n\nStrategy Pattern Tests (27 tests):\n- AttackStrategyTest: 15 tests for Melee, Magic, Ranged attacks\n- DefenseStrategyTest: 12 tests for Standard and HeavyArmor defense\n\nFactory Pattern Tests (35 tests):\n- CharacterFactoryTest: Tests all factory methods and integration\n\nCommand Pattern Tests (30 tests):\n- CommandPatternTest: AttackCommand, HealCommand, CommandInvoker with undo\n\nTemplate Method Tests (17 tests):\n- BattleSequenceTest: StandardBattleSequence, PowerAttackSequence\n\nPlayer Strategy Tests (28 tests):\n- RuleBasedPlayerTest: All three rules with edge cases\n\nTest Results:\n- 152 tests total\n- 52 passing (CharacterStats, RuleBasedPlayer - no TODOs)\n- 100 failing (waiting for student TODO implementations)\n\nDocumentation:\n- TEST_SUITE_README.md: Comprehensive guide with execution strategy,\n  TDD workflow, coverage goals, and troubleshooting\n\nTesting Principles Demonstrated:\n- Nested test organization with @Nested\n- Descriptive test names with @DisplayName\n- AssertJ fluent assertions\n- Edge case coverage (boundaries, null checks, thresholds)\n- Integration tests for pattern verification\n- TDD-ready structure (read test → implement → pass)\n\nBug Fix:\n- Remove duplicate/incorrect Spring AI dependency from build.gradle.kts\n\nStudents can now validate their implementations incrementally as they\ncomplete each TODO, following the TDD red-green-refactor cycle.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
