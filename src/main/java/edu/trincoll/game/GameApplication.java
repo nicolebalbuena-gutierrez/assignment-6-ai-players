@@ -6,6 +6,7 @@ import edu.trincoll.game.model.Character;
 import edu.trincoll.game.model.CharacterType;
 import edu.trincoll.game.player.*;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -57,7 +58,8 @@ public class GameApplication {
     public CommandLineRunner run(
             @Qualifier("openAiChatClient") ChatClient openAiClient,
             @Qualifier("anthropicChatClient") ChatClient anthropicClient,
-            @Qualifier("geminiChatClient") ChatClient geminiClient) {
+            @Autowired(required = false) @Qualifier("geminiChatClient") ChatClient geminiClient) {
+        // Note: geminiClient is optional since it's not configured in ChatClientConfig
 
         return args -> {
             System.out.println("""
@@ -79,28 +81,8 @@ public class GameApplication {
                 """);
 
             // TODO 6: Implement team configuration (15 points)
-            // <p>
-            // Create two teams with a mix of player types:
-            // <p>
-            // - Team 1: Should include at least 1 human player
-            // - Team 2: Should use all three AI models (GPT-5, Claude Sonnet 4.5, Gemini 2.5 Pro)
-            // <p>
-            // Example team setup:
-            // <p>
-            //   Team 1: Human Warrior, RuleBasedAI Mage
-            //   Team 2: GPT-5 Archer, Claude Sonnet 4.5 Rogue, Gemini 2.5 Pro Warrior
-            // <p>
-            // Steps:
-            // <p>
-            // 1. Create characters using CharacterFactory
-            // 2. Create Player instances (Human, LLMPlayer, RuleBasedPlayer)
-            // 3. Map each character to their player
-            // 4. Create GameController with teams and player map
-            // 5. Run the game
-            // <p>
-            // Hint: Use the helper method createTeamConfiguration() below
-
-            throw new UnsupportedOperationException("TODO 6: Configure teams and start game");
+            GameController controller = createTeamConfiguration(openAiClient, anthropicClient, geminiClient);
+            controller.playGame();
         };
     }
 
@@ -137,8 +119,24 @@ public class GameApplication {
             ChatClient openAiClient,
             ChatClient anthropicClient,
             ChatClient geminiClient) {
-        // TODO 6: Implement team configuration
-        throw new UnsupportedOperationException("TODO 6: Implement team configuration");
+        // Team 1: Human + RuleBasedAI
+        Character humanWarrior = CharacterFactory.createWarrior("Conan");
+        Character aiMage = CharacterFactory.createMage("Gandalf");
+        List<Character> team1 = List.of(humanWarrior, aiMage);
+        
+        // Team 2: Two LLM players (GPT-5 and Claude Sonnet 4.5)
+        Character gptArcher = CharacterFactory.createArcher("Legolas");
+        Character claudeRogue = CharacterFactory.createRogue("Shadow");
+        List<Character> team2 = List.of(gptArcher, claudeRogue);
+        
+        // Map characters to players
+        Map<Character, Player> playerMap = new HashMap<>();
+        playerMap.put(humanWarrior, new HumanPlayer());
+        playerMap.put(aiMage, new RuleBasedPlayer());
+        playerMap.put(gptArcher, new LLMPlayer(openAiClient, "GPT-5"));
+        playerMap.put(claudeRogue, new LLMPlayer(anthropicClient, "Claude-Sonnet-4.5"));
+        
+        return new GameController(team1, team2, playerMap);
     }
 
     /**

@@ -68,7 +68,42 @@ public class GameController {
      * Hint: Use processTurn() helper method for each character
      */
     public void playGame() {
-        throw new UnsupportedOperationException("TODO 4: Implement game loop");
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("GAME START!");
+        System.out.println("=".repeat(60));
+        
+        displayTeamSetup();
+        
+        while (!isGameOver()) {
+            displayRoundHeader();
+            
+            // Team 1's turn
+            for (Character character : team1) {
+                if (isGameOver()) break;
+                if (character.getStats().health() > 0) {
+                    processTurn(character, team1, team2);
+                }
+            }
+            
+            if (isGameOver()) break;
+            
+            // Team 2's turn
+            for (Character character : team2) {
+                if (isGameOver()) break;
+                if (character.getStats().health() > 0) {
+                    processTurn(character, team2, team1);
+                }
+            }
+            
+            // Advance to next round
+            gameState = gameState.nextRound();
+            
+            if (!isGameOver()) {
+                displayRoundSummary();
+            }
+        }
+        
+        displayResult();
     }
 
     /**
@@ -97,8 +132,32 @@ public class GameController {
             return;
         }
 
-        // TODO 5: Get player and execute their decision
-        throw new UnsupportedOperationException("TODO 5: Process character turn");
+        System.out.println("\n" + character.getName() + "'s turn...");
+        
+        // Get the player controlling this character
+        Player player = playerMap.get(character);
+        if (player == null) {
+            System.out.println("ERROR: No player assigned to " + character.getName());
+            return;
+        }
+        
+        // Get the player's decision
+        GameCommand command = player.decideAction(character, allies, enemies, gameState);
+        
+        if (command == null) {
+            System.out.println("ERROR: Player returned null command");
+            return;
+        }
+        
+        // Execute the command
+        invoker.executeCommand(command);
+        
+        // Display the result
+        displayActionResult(command);
+        
+        // Update game state
+        gameState = gameState.nextTurn()
+            .withUndo(true, invoker.getCommandHistory().size());
     }
 
     /**
@@ -150,10 +209,84 @@ public class GameController {
 
     private void displayCharacterStatus(Character c) {
         String status = c.getStats().health() > 0 ? "Alive" : "Defeated";
-        System.out.printf("  %s (%s): %d HP - %s%n",
+        double healthPercent = c.getStats().maxHealth() > 0 ?
+            (double) c.getStats().health() / c.getStats().maxHealth() * 100 : 0;
+        System.out.printf("  %s (%s): %d/%d HP (%.0f%%) - %s%n",
             c.getName(),
             c.getType(),
             Math.max(0, c.getStats().health()),
+            c.getStats().maxHealth(),
+            Math.max(0, healthPercent),
             status);
+    }
+    
+    /**
+     * Displays the initial team setup.
+     */
+    private void displayTeamSetup() {
+        System.out.println("\n=== Team Setup ===");
+        System.out.println("\nTeam 1:");
+        for (Character c : team1) {
+            Player p = playerMap.get(c);
+            String playerType = p != null ? p.getClass().getSimpleName() : "Unknown";
+            System.out.printf("  - %s (%s) - %s%n",
+                c.getName(), c.getType(), playerType);
+        }
+        
+        System.out.println("\nTeam 2:");
+        for (Character c : team2) {
+            Player p = playerMap.get(c);
+            String playerType = p != null ? p.getClass().getSimpleName() : "Unknown";
+            System.out.printf("  - %s (%s) - %s%n",
+                c.getName(), c.getType(), playerType);
+        }
+    }
+    
+    /**
+     * Displays round header.
+     */
+    private void displayRoundHeader() {
+        System.out.println("\n" + "=".repeat(60));
+        System.out.printf("TURN %d - ROUND %d%n",
+            gameState.turnNumber(), gameState.roundNumber());
+        System.out.println("=".repeat(60));
+        
+        // Display current team status
+        System.out.println("\nTeam 1 Status:");
+        for (Character c : team1) {
+            displayCharacterStatus(c);
+        }
+        
+        System.out.println("\nTeam 2 Status:");
+        for (Character c : team2) {
+            displayCharacterStatus(c);
+        }
+    }
+    
+    /**
+     * Displays round summary.
+     */
+    private void displayRoundSummary() {
+        System.out.println("\n--- Round " + gameState.roundNumber() + " Complete ---");
+        System.out.println("Team 1: " + countAlive(team1) + "/" + team1.size() + " alive");
+        System.out.println("Team 2: " + countAlive(team2) + "/" + team2.size() + " alive");
+    }
+    
+    /**
+     * Displays the result of an action.
+     */
+    private void displayActionResult(GameCommand command) {
+        // Display command description
+        System.out.println("→ " + command.getDescription());
+        System.out.println("---");
+    }
+    
+    /**
+     * Counts alive characters in a team.
+     */
+    private int countAlive(List<Character> team) {
+        return (int) team.stream()
+            .filter(c -> c.getStats().health() > 0)
+            .count();
     }
 }
